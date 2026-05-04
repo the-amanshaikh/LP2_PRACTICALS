@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Cloud Summit 2026 | Registration</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-900 antialiased h-screen overflow-hidden">
+    <div id="root" class="h-full"></div>
+
+    <script type="text/babel">
+        function App() {
+            const [attendees, setAttendees] = React.useState([]);
+            const [form, setForm] = React.useState({ name: '', email: '', company: '', ticketType: 'General Admission' });
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+            React.useEffect(() => { fetchAttendees(); }, []);
+
+            const fetchAttendees = async () => {
+                const res = await fetch('/api/attendees');
+                const data = await res.json();
+                setAttendees(data);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                
+                await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(form)
+                });
+                
+                setForm({ name: '', email: '', company: '', ticketType: 'General Admission' });
+                setIsSubmitting(false);
+                fetchAttendees();
+                alert('Registration Successful! Your ticket has been secured.');
+            };
+
+            return (
+                <div class="flex h-full w-full">
+                    
+                    {/* Left Panel: Event Info & Form */}
+                    <div class="w-full lg:w-1/2 bg-white flex flex-col justify-center px-12 lg:px-24 overflow-y-auto">
+                        <div class="max-w-md w-full mx-auto">
+                            <div class="mb-8">
+                                <span class="inline-block py-1 px-3 rounded-full bg-indigo-50 text-indigo-600 text-sm font-bold tracking-wider mb-4 border border-indigo-100">OCTOBER 15-17, 2026</span>
+                                <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-3">Global Cloud<br/><span class="text-indigo-600">Summit 2026</span></h1>
+                                <p class="text-gray-500 text-lg">Secure your spot at the premier engineering and cloud architecture conference of the year.</p>
+                            </div>
+
+                            <form onSubmit={handleSubmit} class="space-y-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+                                    <input type="text" required placeholder="Jane Doe" value={form.name} onChange={e => setForm({...form, name: e.target.value})} 
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 transition shadow-sm" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Professional Email</label>
+                                    <input type="email" required placeholder="jane@company.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} 
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 transition shadow-sm" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Company / University</label>
+                                    <input type="text" required placeholder="Tech Corp Inc." value={form.company} onChange={e => setForm({...form, company: e.target.value})} 
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 transition shadow-sm" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Ticket Type</label>
+                                    <select value={form.ticketType} onChange={e => setForm({...form, ticketType: e.target.value})} 
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 transition shadow-sm appearance-none">
+                                        <option>General Admission</option>
+                                        <option>VIP Pass</option>
+                                        <option>Student / Academic</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" disabled={isSubmitting} class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-lg mt-4 disabled:opacity-50">
+                                    {isSubmitting ? 'Processing...' : 'Complete Registration'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {/* Right Panel: Live Attendee Roster (Proves DB works) */}
+                    <div class="hidden lg:flex w-1/2 bg-gray-50 border-l border-gray-200 flex-col p-12 overflow-y-auto">
+                        <div class="max-w-lg mx-auto w-full">
+                            <div class="flex items-center justify-between mb-8">
+                                <h2 class="text-2xl font-bold text-gray-900">Live Attendee Roster</h2>
+                                <span class="bg-green-100 text-green-700 py-1 px-3 rounded-full text-xs font-bold flex items-center shadow-sm border border-green-200">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span> DB Sync Active
+                                </span>
+                            </div>
+
+                            <div class="space-y-4">
+                                {attendees.map((attendee, index) => (
+                                    <div key={index} class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition flex items-center justify-between">
+                                        <div class="flex items-center space-x-4">
+                                            <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg border border-indigo-200">
+                                                {attendee.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <h3 class="font-bold text-gray-900">{attendee.name}</h3>
+                                                <p class="text-sm text-gray-500">{attendee.company}</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-semibold border border-gray-200">
+                                                {attendee.ticketType}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
