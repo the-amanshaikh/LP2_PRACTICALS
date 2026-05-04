@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Records</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input, button { padding: 8px; margin-right: 10px; margin-bottom: 10px; }
+        table { border-collapse: collapse; width: 100%; max-width: 600px; margin-top: 20px;}
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function App() {
+            const [students, setStudents] = React.useState([]);
+            const [form, setForm] = React.useState({ name: '', rollNo: '', course: '' });
+
+            React.useEffect(() => { fetchStudents(); }, []);
+
+            const fetchStudents = async () => {
+                const res = await fetch('/api/students');
+                const data = await res.json();
+                setStudents(data);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                await fetch('/api/students', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(form)
+                });
+                setForm({ name: '', rollNo: '', course: '' });
+                fetchStudents();
+            };
+
+            return (
+                <div>
+                    <h2>Cloud Student Record System</h2>
+                    <form onSubmit={handleSubmit}>
+                        <input placeholder="Name" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+                        <input placeholder="Roll No" value={form.rollNo} onChange={e => setForm({...form, rollNo: e.target.value})} required />
+                        <input placeholder="Course" value={form.course} onChange={e => setForm({...form, course: e.target.value})} required />
+                        <button type="submit">Add Student</button>
+                    </form>
+                    <table>
+                        <thead><tr><th>Name</th><th>Roll No</th><th>Course</th></tr></thead>
+                        <tbody>
+                            {students.map((s, index) => (
+                                <tr key={index}><td>{s.name}</td><td>{s.rollNo}</td><td>{s.course}</td></tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
