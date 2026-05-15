@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudSync | Task Manager</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 antialiased min-h-screen flex items-center justify-center p-4">
+    <div id="root" class="w-full max-w-2xl"></div>
+
+    <script type="text/babel">
+        function App() {
+            const [tasks, setTasks] = React.useState([]);
+            const [newTaskTitle, setNewTaskTitle] = React.useState('');
+
+            // Load tasks on boot
+            React.useEffect(() => { fetchTasks(); }, []);
+
+            const fetchTasks = async () => {
+                const res = await fetch('/api/tasks');
+                const data = await res.json();
+                setTasks(data);
+            };
+
+            const handleAddTask = async (e) => {
+                e.preventDefault();
+                if (!newTaskTitle.trim()) return;
+                
+                await fetch('/api/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTaskTitle })
+                });
+                setNewTaskTitle('');
+                fetchTasks(); // Refresh list
+            };
+
+            const handleToggleTask = async (id) => {
+                await fetch(`/api/tasks/${id}`, { method: 'PUT' });
+                fetchTasks(); // Refresh list
+            };
+
+            const handleDeleteTask = async (id) => {
+                await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+                fetchTasks(); // Refresh list
+            };
+
+            const completedCount = tasks.filter(t => t.completed).length;
+
+            return (
+                <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                    {/* Header Header */}
+                    <div class="bg-indigo-600 p-8 text-white">
+                        <div class="flex justify-between items-center mb-2">
+                            <h1 class="text-3xl font-extrabold tracking-tight">CloudSync Tasks</h1>
+                            <span class="bg-indigo-500 text-indigo-100 py-1 px-3 rounded-full text-sm font-bold shadow-inner">
+                                {completedCount} / {tasks.length} Done
+                            </span>
+                        </div>
+                        <p class="text-indigo-200">Manage your cloud deployments efficiently.</p>
+                    </div>
+
+                    <div class="p-8">
+                        {/* Add Task Form */}
+                        <form onSubmit={handleAddTask} class="flex space-x-3 mb-8">
+                            <input 
+                                type="text" 
+                                placeholder="What needs to be done?" 
+                                value={newTaskTitle} 
+                                onChange={e => setNewTaskTitle(e.target.value)} 
+                                class="flex-1 bg-gray-50 border border-gray-200 text-gray-900 px-5 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-600 transition shadow-sm text-lg"
+                            />
+                            <button type="submit" class="bg-black hover:bg-gray-800 text-white font-bold py-4 px-8 rounded-xl transition shadow-lg flex items-center">
+                                Add Task
+                            </button>
+                        </form>
+
+                        {/* Task List */}
+                        <div class="space-y-3">
+                            {tasks.length === 0 ? (
+                                <p class="text-center text-gray-400 py-6">All tasks completed. Great job!</p>
+                            ) : (
+                                tasks.map(task => (
+                                    <div key={task._id} class={`flex items-center justify-between p-4 rounded-xl border transition ${task.completed ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200 hover:border-indigo-300 shadow-sm'}`}>
+                                        
+                                        <div class="flex items-center space-x-4 flex-1 cursor-pointer" onClick={() => handleToggleTask(task._id)}>
+                                            {/* Custom Checkbox */}
+                                            <div class={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition ${task.completed ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}>
+                                                {task.completed && <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                            </div>
+                                            
+                                            {/* Task Title */}
+                                            <span class={`text-lg transition font-medium ${task.completed ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                                                {task.title}
+                                            </span>
+                                        </div>
+
+                                        {/* Delete Button */}
+                                        <button onClick={() => handleDeleteTask(task._id)} class="text-gray-300 hover:text-red-500 p-2 transition">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
